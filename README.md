@@ -55,4 +55,4 @@ The `TAPT` platform code is **temporary** and signals pre-platformisation. When 
 
 ## Questions?
 
-Slack Idris Aliyu (@ialiyu) or raise it in your weekly 1:1.
+Slack Idris Aliyu (@ialiyu).
