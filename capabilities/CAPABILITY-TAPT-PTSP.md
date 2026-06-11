@@ -12,6 +12,7 @@ personas:
   - merchant
   - operations-team
   - field-support
+  - third-party-admin
 
 channels:
   - POS
