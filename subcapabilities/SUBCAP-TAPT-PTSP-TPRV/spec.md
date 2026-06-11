@@ -1,22 +1,26 @@
 ---
 id: SUBCAP-TAPT-PTSP-TPRV
 name: Terminal Provisioning
-capability: CAPABILITY-TAPT-PTSP — Terminal Service Provider Operations
-platform: TAPT — Teamapt (pre-platformisation)
+capability: CAPABILITY-TAPT-PTSP
+platform: TAPT
 status: active
+owner: Mark Momoh
+
 personas:
   - operations-team
-  - agent
-  - merchant
+  - third-party-admin
+
 channels:
+  - POS
   - INTERNAL_SYSTEM
+
 problem: |
-  Terminal provisioning is tightly coupled to Moniepoint's internal operations,
-  making it difficult for Teamapt to offer PTSP services to other PTSP operators
-  who want to outsource terminal provisioning and management without taking on
-  the associated operational overhead. There is no decoupled provisioning path
-  that allows backoffice admins to assign and manage terminals on behalf of
-  external PTSP operators independently of Moniepoint's own estate.
+  There is no digital path for back office admins to assign POS terminals to third-party
+  admins (acquirers), or for third-party admins to assign those terminals to their
+  merchants. The terminal provisioning flow — from inventory allocation to merchant-ready
+  terminal — does not yet exist within the Aptpay PTSP platform, leaving assignment
+  untracked and error-prone.
+
 design_refs:
 engineering_refs:
 deprecation_reason:
@@ -24,58 +28,43 @@ deprecation_reason:
 
 ## Description
 
-Terminal Provisioning covers the end-to-end flow by which Teamapt and Moniepoint
-backoffice admins provision POS terminals and assign them to registered merchants
-or super agents. The subcapability decouples provisioning from Moniepoint's
-internal estate, enabling Teamapt to offer PTSP services to third-party PTSP
-operators who wish to outsource terminal operations without the associated
-operational overhead.
-
-All terminal assignment actions are subject to a maker-checker gate: the admin
-who initiates an assignment cannot also approve it. Terminals already assigned
-to Moniepoint cannot be reassigned to other merchants or super agents.
+Terminal Provisioning covers the end-to-end digital assignment of POS terminals from
+the Aptpay PTSP inventory to merchants. A back office admin assigns a terminal from
+virtual inventory (via the Moniepoint virtual inventory API) to a third-party admin
+(acquirer). The third-party admin then assigns that terminal to one of their merchants
+through the portal. The subcapability includes validation to prevent duplicate terminal
+IDs and incorrect merchant-terminal mappings before a terminal goes live.
 
 ## Success Metrics
 
 | Metric | Target |
 |---|---|
-| Agent onboarding cycle time (terminal provisioning leg) | <= 3 business days |
+| Time from terminal assignment request to merchant-ready | TBD |
 
 ## Scope Boundaries
 
-**In scope**
-- Decoupled terminal provisioning supporting assignment to any fully onboarded
-  registered merchant or super agent across multiple PTSP operators
-- Backoffice-initiated terminal assignment via INTERNAL_SYSTEM with mandatory
-  maker-checker approval gate
-- Hard block on reassignment of already-assigned Moniepoint terminals to any
-  other merchant or super agent
-- Rejection of assignment attempts targeting merchants or super agents not yet
-  fully onboarded in the system
-- Rejection of duplicate terminal serial number submissions
-- Graceful failure and retry path when TMS is unavailable during a provisioning
-  attempt
+**In scope:**
+- Back office admin assignment of terminals from inventory to a third-party admin
+- Third-party admin assignment of terminals to their merchants
+- Integration with the Moniepoint virtual inventory API for terminal record retrieval
+- Assignment validation — duplicate terminal ID checks and merchant mapping verification
 
-**Out of scope**
-- Physical terminal logistics and delivery tracking
-- Terminal decommissioning, recall, or swap
-- Self-service terminal requests initiated by merchants or agents directly
-- Terminal configuration beyond assignment (parameter loading, key injection)
+**Out of scope:**
+- Physical key injection
+- SIM and connectivity setup
+- Terminal repairs and maintenance
+- Terminal decommissioning
+- Agent onboarding (separate subcapability)
 
 ## Dependencies
 
-- **TMS** — Terminal Management System must be reachable for all provisioning
-  and assignment operations
-- **Agent records** — assignee must exist as a fully onboarded agent in the
-  platform before assignment can proceed
-- **Merchant records** — assignee must exist as a fully onboarded merchant in
-  the platform before assignment can proceed
-- **Maker-checker framework** — platform-level approval workflow must be
-  available; maker and checker must be distinct users
+- Moniepoint virtual inventory API — terminal records must exist in inventory before
+  assignment can proceed; owned by the virtual inventory team
+- Terminal Management System (TMS) — terminal configurations are anchored here
+- CAPABILITY-TAPT-TRXN — transaction routing depends on the correct terminal-merchant
+  mapping established by this subcapability
 
 ## Open Questions
 
-- Should the maker-checker gate be synchronous (assignment pending until
-  checker acts) or asynchronous with a timeout escalation?
-- Is there a maximum number of terminals assignable to a single merchant or
-  super agent, or is this uncapped at the platform level?
+- What is a realistic target for time from assignment request to merchant-ready? Is
+  there an existing ops SLA we can use as a baseline for the TBD metric target?
